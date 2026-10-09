@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contra Settings - AI Contract Analyzer</title>
+  <link rel="stylesheet" href="options.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body class="classical-theme">
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="logo-shield">
+          <img src="../icons/icon-48.png" alt="Contra Logo" class="brand-logo-img">
+        </div>
+        <div>
+          <h1 class="brand-title">Contra Settings</h1>
+          <p class="brand-subtitle">Configure AI model providers, API credentials & extraction pipeline</p>
+        </div>
+      </div>
+      <div class="header-badges">
+        <span class="badge badge-v3">Manifest V3</span>
+        <span class="badge badge-ready" id="statusPill">Checking...</span>
+      </div>
+    </header>
+
+    <main class="settings-grid">
+      <!-- Left Column: API Provider & Credentials -->
+      <section class="card config-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <div class="card-icon">⚡</div>
+            <div>
+              <h2 class="card-title">AI Engine & Credentials</h2>
+              <p class="card-desc">Select your preferred inference provider</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <!-- Provider Picker -->
+          <div class="form-group">
+            <label class="form-label">Active Provider</label>
+            <div class="provider-toggle">
+              <label class="provider-option" id="labelGroq">
+                <input type="radio" name="provider" value="groq" id="providerGroq" checked>
+                <div class="provider-box">
+                  <div class="provider-box-header">
+                    <span class="provider-name">Groq Platform</span>
+                    <span class="pill-chip">Recommended</span>
+                  </div>
+                  <p class="provider-detail">Ultra-fast inference with Llama 3.3 & Llama 3.2 Vision</p>
+                </div>
+              </label>
+
+              <label class="provider-option" id="labelGemini">
+                <input type="radio" name="provider" value="gemini" id="providerGemini">
+                <div class="provider-box">
+                  <div class="provider-box-header">
+                    <span class="provider-name">Google Gemini</span>
+                    <span class="pill-chip pill-gemini">Flash 2.5</span>
+                  </div>
+                  <p class="provider-detail">Gemini Flash multimodal engine with strict schema</p>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Groq Configuration Block -->
+          <div class="provider-settings-panel" id="groqSettings">
+            <div class="form-group">
+              <div class="label-row">
+                <label for="groqApiKey" class="form-label">Groq API Key</label>
+                <a href="https://console.groq.com/keys" target="_blank" rel="noreferrer" class="link-external">
+                  Get Free Groq Key &rarr;
+                </a>
+              </div>
+              <div class="input-with-button">
+                <input type="password" id="groqApiKey" placeholder="gsk_..." spellcheck="false" autocomplete="off" class="form-input mono">
+                <button type="button" class="btn-toggle-eye" id="toggleGroqKey" title="Show/Hide Key">
+                  <svg class="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                </button>
+              </div>
+              <span class="input-hint">Your API key is securely stored in local extension sync storage.</span>
+            </div>
+
+            <div class="form-row-2">
+              <div class="form-group">
+                <label for="groqTextModel" class="form-label">Text Model (Tier 1)</label>
+                <select id="groqTextModel" class="form-select">
+                  <option value="openai/gpt-oss-120b" selected>openai/gpt-oss-120b (Recommended &bull; 500 T/s)</option>
+                  <option value="openai/gpt-oss-20b">openai/gpt-oss-20b (Ultra-fast &bull; 1,000 T/s)</option>
+                  <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile (Enterprise)</option>
+                  <option value="llama-3.1-8b-instant">llama-3.1-8b-instant (Enterprise)</option>
+                  <option value="custom">-- Custom Model ID --</option>
+                </select>
+                <input type="text" id="groqCustomTextModel" placeholder="e.g. your-model-id" class="form-input mono hidden" style="margin-top: 6px;">
+              </div>
+
+              <div class="form-group">
+                <label for="groqVisionModel" class="form-label">Vision Model (Tier 2)</label>
+                <select id="groqVisionModel" class="form-select">
+                  <option value="qwen/qwen3.8-27b" selected>qwen/qwen3.8-27b (Active Groq Multimodal)</option>
+                  <option value="custom">-- Custom Vision Model ID --</option>
+                </select>
+                <input type="text" id="groqCustomVisionModel" placeholder="e.g. your-vision-model-id" class="form-input mono hidden" style="margin-top: 6px;">
+              </div>
+            </div>
+          </div>
+
+          <!-- Gemini Configuration Block -->
+          <div class="provider-settings-panel hidden" id="geminiSettings">
+            <div class="form-group">
+              <div class="label-row">
+                <label for="geminiApiKey" class="form-label">Google Gemini API Key</label>
+                <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" class="link-external">
+                  Get Gemini Key &rarr;
+                </a>
+              </div>
+              <div class="input-with-button">
+                <input type="password" id="geminiApiKey" placeholder="AIzaSy..." spellcheck="false" autocomplete="off" class="form-input mono">
+                <button type="button" class="btn-toggle-eye" id="toggleGeminiKey" title="Show/Hide Key">
+                  <svg class="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                </button>
+              </div>
+              <span class="input-hint">Gemini Flash provides both text and screenshot analysis.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="geminiModel" class="form-label">Gemini Model</label>
+              <select id="geminiModel" class="form-select">
+                <option value="gemini-2.5-flash" selected>gemini-2.5-flash (State of the art)</option>
+                <option value="gemini-1.5-flash">gemini-1.5-flash (Legacy fallback)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Connection Test Box -->
+          <div class="test-connection-box">
+            <button type="button" class="btn-secondary" id="btnTestConnection">
+              <span class="btn-icon">🔌</span>
+              Test Connection
+            </button>
+            <div id="testStatus" class="test-status-msg hidden"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: Extraction Pipeline & Cache -->
+      <div class="right-stack">
+        <!-- Extraction Rules Card -->
+        <section class="card pipeline-card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <div class="card-icon">⚙️</div>
+              <div>
+                <h2 class="card-title">Dual-Mode Extraction Rules</h2>
+                <p class="card-desc">Configure DOM scraper & vision fallback heuristics</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-body">
+            <div class="form-group">
+              <label for="wordThreshold" class="form-label">
+                Tier 2 Vision Fallback Word Threshold
+                <span class="tooltip-badge" title="If extracted clean DOM text is below this word count, Contra automatically triggers tab screenshot vision analysis.">?</span>
+              </label>
+              <div class="threshold-slider-group">
+                <input type="range" id="wordThreshold" min="50" max="600" step="25" value="200" class="form-range">
+                <span class="range-value" id="wordThresholdValue">200 words</span>
+              </div>
+              <p class="input-hint">Pages with fewer words (iFrames, PDFs, Canvas) will trigger visual screenshot capture.</p>
+            </div>
+
+            <div class="form-check-group">
+              <label class="checkbox-container">
+                <input type="checkbox" id="cacheEnabled" checked>
+                <span class="custom-checkbox"></span>
+                <span class="checkbox-label">
+                  <strong>Enable Instant Local Caching</strong>
+                  <span class="subtext">Stores contract analyses in <code>chrome.storage.local</code> to prevent redundant API queries.</span>
+                </span>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <!-- Cached Analyses Management Card -->
+        <section class="card cache-card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <div class="card-icon">🗄️</div>
+              <div>
+                <h2 class="card-title">Cache Storage</h2>
+                <p class="card-desc" id="cacheSummary">0 cached contract analyses</p>
+              </div>
+            </div>
+            <button type="button" class="btn-danger-outline" id="btnClearCache">
+              Clear All Cache
+            </button>
+          </div>
+
+          <div class="card-body">
+            <div class="cache-list" id="cacheList">
+              <div class="empty-cache">No cached analyses stored yet. Visit a Terms of Service page and run a scan!</div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Save Action Footer -->
+    <footer class="app-footer">
+      <div class="footer-info">
+        <span>Contra v1.0.0 &bull; Ready for Chrome Developer Mode</span>
+      </div>
+      <div class="footer-actions" style="display: flex; gap: 10px;">
+        <button type="button" class="btn-secondary" id="btnReloadExtension" title="Reload extension background service worker">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+          Reload Extension
+        </button>
+        <button type="button" class="btn-primary" id="btnSave">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+            <polyline points="17 21 17 13 7 13 7 21"/>
+            <polyline points="7 3 7 8 15 8"/>
+          </svg>
+          Save Settings
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="options.js"></script>
+</body>
+</html>

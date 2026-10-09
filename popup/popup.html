@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contra - AI Contract Analyzer</title>
+  <link rel="stylesheet" href="popup.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body class="classical-theme">
+  <div class="popup-container">
+    <!-- Extension Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="logo-shield">
+          <img src="../icons/icon-48.png" alt="Contra Logo" class="brand-logo-img">
+        </div>
+        <div class="brand-text">
+          <span class="app-title">Contra</span>
+          <span class="app-subtitle">Terms & Conditions AI</span>
+        </div>
+      </div>
+
+      <div class="header-controls">
+        <span class="mode-badge" id="modeBadge" title="Current Extraction Pipeline Mode">
+          <span class="mode-dot"></span>
+          <span id="modeBadgeText">AUTO</span>
+        </span>
+        <button type="button" class="icon-btn" id="btnOpenSettings" title="Open Settings">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Edge Case: Missing API Key Alert -->
+    <div class="api-key-banner hidden" id="noApiKeyBanner">
+      <div class="banner-icon">🔑</div>
+      <div class="banner-body">
+        <strong>API Key Required</strong>
+        <p>Set your Groq or Gemini API key to activate instant contract analysis.</p>
+        <button type="button" class="banner-btn" id="btnConfigureKey">Configure in Settings &rarr;</button>
+      </div>
+    </div>
+
+    <!-- Active Tab Info Bar -->
+    <div class="tab-info-bar">
+      <div class="tab-domain-info">
+        <span class="domain-icon">🌐</span>
+        <span class="domain-name" id="currentDomain">Detecting tab...</span>
+      </div>
+      <span class="legal-badge" id="legalBadge">Evaluating</span>
+    </div>
+
+    <!-- Scan Trigger Action Card -->
+    <div class="scan-action-card" id="scanActionCard">
+      <div class="pipeline-status" id="pipelineStatus">
+        <span class="status-indicator"></span>
+        <span class="status-label" id="statusLabel">Ready to analyze active webpage</span>
+      </div>
+
+      <div class="scan-btn-group">
+        <button type="button" class="btn-scan" id="btnScan">
+          <span class="btn-icon">⚡</span>
+          <span id="btnScanText">Scan Contract</span>
+        </button>
+        <button type="button" class="btn-vision-fallback" id="btnForceVision" title="Force Vision Mode (Tier 2 Screenshot OCR)">
+          👁️ Vision
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-state hidden" id="loadingState">
+      <div class="spinner-glow">
+        <div class="spinner-ring"></div>
+      </div>
+      <div class="loading-text-group">
+        <h3 class="loading-heading" id="loadingStepTitle">Extracting contract text...</h3>
+        <p class="loading-detail" id="loadingStepDetail">Sanitizing DOM structure and filtering cookie banners</p>
+      </div>
+      <div class="loading-progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div class="error-state hidden" id="errorState">
+      <div class="error-icon">⚠️</div>
+      <h3 class="error-title" id="errorTitle">Analysis Error</h3>
+      <p class="error-message" id="errorMessage">Unable to parse contract content.</p>
+      <div class="error-actions">
+        <button type="button" class="btn-retry" id="btnRetry">Try Again</button>
+        <button type="button" class="btn-settings-link" id="btnSettingsLink">Check Settings</button>
+      </div>
+    </div>
+
+    <!-- Results Container -->
+    <div class="results-container hidden" id="resultsContainer">
+      <!-- Cache Pill Bar -->
+      <div class="cache-indicator hidden" id="cacheIndicator">
+        <span>⚡ Loaded from cache (<span id="cacheTime">Just now</span>)</span>
+        <button type="button" class="btn-cache-refresh" id="btnRefreshScan" title="Re-analyze and update cache">
+          🔄 Re-scan
+        </button>
+      </div>
+
+      <!-- Crux Banner & Overall Risk Rating -->
+      <div class="crux-banner-card" id="cruxCard">
+        <div class="crux-header">
+          <div class="crux-title-wrap">
+            <span class="crux-badge-label">EXECUTIVE SUMMARY</span>
+            <h2 class="crux-title">Contract Crux</h2>
+          </div>
+          <!-- Overall Risk Badge -->
+          <div class="risk-pill" id="overallRiskPill">
+            <span class="risk-pill-dot"></span>
+            <span class="risk-pill-text" id="overallRiskText">Medium Risk</span>
+          </div>
+        </div>
+
+        <p class="crux-text" id="cruxSummary">
+          Analyzing contract executive summary...
+        </p>
+
+        <!-- Risk distribution counters -->
+        <div class="risk-stats-bar">
+          <div class="risk-stat high" id="statHigh">0 High Risk</div>
+          <div class="risk-stat med" id="statMed">0 Medium Risk</div>
+          <div class="risk-stat low" id="statLow">0 Low Risk</div>
+        </div>
+      </div>
+
+      <!-- Key Takeaways Section -->
+      <div class="section-container">
+        <div class="section-header">
+          <h3 class="section-title">
+            <span class="section-icon">📌</span>
+            Key Consumer Takeaways
+          </h3>
+        </div>
+        <ul class="takeaways-list" id="takeawaysList">
+          <!-- Populated dynamically -->
+        </ul>
+      </div>
+
+      <!-- Flagged Provisions Section -->
+      <div class="section-container">
+        <div class="section-header">
+          <div class="section-title-wrap">
+            <h3 class="section-title">
+              <span class="section-icon">🛡️</span>
+              Flagged Provisions
+            </h3>
+            <span class="count-badge" id="provisionsCount">0</span>
+          </div>
+
+          <!-- Risk Filter Pills -->
+          <div class="filter-pills">
+            <button type="button" class="filter-btn active" data-filter="all">All</button>
+            <button type="button" class="filter-btn" data-filter="High">High</button>
+            <button type="button" class="filter-btn" data-filter="Medium">Med</button>
+            <button type="button" class="filter-btn" data-filter="Low">Low</button>
+          </div>
+        </div>
+
+        <!-- Accordion Container -->
+        <div class="accordion-list" id="accordionList">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <!-- Action Footer -->
+      <div class="results-footer">
+        <button type="button" class="btn-copy-report" id="btnCopyReport">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+          <span id="btnCopyText">Copy Analysis Report</span>
+        </button>
+        <button type="button" class="btn-rescan-subtle" id="btnRescanSubtle">
+          Re-scan Page
+        </button>
+      </div>
+
+      <!-- Formal Legal Disclaimer -->
+      <div class="disclaimer-banner">
+        <span class="disclaimer-icon">⚖️</span>
+        <span class="disclaimer-text" id="disclaimerText">
+          This analysis is an AI-generated preliminary assessment and does not constitute formal legal advice.
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
