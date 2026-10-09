@@ -1,4 +1,4 @@
-# Contra — Contract Intelligence for Chrome
+# Contra 
 
 **Understand the fine print. Protect your rights.**
 
