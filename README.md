@@ -1,105 +1,431 @@
-# Contra Chrome Ext
+# Contra — Contract Intelligence for Chrome
 
-**Contra** is a production-ready **Manifest V3** Chrome Extension that reads, extracts, and analyzes Terms & Conditions (ToC / ToS), Privacy Policies, and End User License Agreements (EULA) in real-time. It leverages the ultra-fast **Groq Platform API** (`openai/gpt-oss-120b`, `openai/gpt-oss-20b`, `qwen/qwen3.8-27b`) and the **Google Gemini Flash API** (`gemini-2.5-flash`) with strict JSON schema enforcement to protect consumers from predatory contractual terms.
+**Understand the fine print. Protect your rights.**
 
----
+Contra is a Manifest V3 Chrome extension that extracts, analyzes, and explains Terms of Service (ToS), Privacy Policies, and End User License Agreements (EULAs) in real time.
 
-## 🌟 Key Features
+Powered by the Groq API and Google Gemini Flash, Contra identifies potentially predatory contractual provisions and translates complex legal language into clear, actionable insights. Its hybrid extraction pipeline combines DOM-based text extraction with vision-powered OCR to analyze even difficult-to-access legal documents.
 
-### 1. Dual-Mode Hybrid Extraction Pipeline
-* **Tier 1 (DOM Text Scraper)**: Automatically targets core text containers (`<main>`, `<article>`, `.terms`, `.legal`, `#tos`), deep-cloning the DOM and stripping out noise such as navigation bars, headers, footers, cookie banners (`OneTrust`, `CookieNotice`, etc.), modals, and scripts.
-* **Tier 2 (Vision/Screenshot Fallback)**: If extracted clean DOM text is under the threshold (default: 200 words) — indicating iFrames, Shadow DOM, scrollable modal overlays, embedded PDFs, or Canvas — Contra triggers `chrome.tabs.captureVisibleTab` and passes an optimized viewport screenshot to multimodal models (`qwen/qwen3.8-27b` on Groq or `gemini-2.5-flash` on Google Gemini).
-* **Self-Healing Fallback**: If vision OCR is not supported on a specific API tier, Contra automatically falls back to DOM text extraction, guaranteeing an uninterrupted analysis report.
-* **Manual Vision Mode**: Users can explicitly click **"👁️ Vision"** to analyze visual layouts on demand.
-
-### 2. Deep Consumer Protection Analysis
-Contra flags predatory and one-sided clauses across 7 key legal categories:
-1. **Automatic Renewal** (Hidden evergreen renewals, aggressive billing, 90-day certified mail notice clauses)
-2. **Additional Charges** (Hidden surcharges, chargeback penalty fees, cancellation surcharges)
-3. **Refund Restrictions** (Strict no-refund policies, forfeiture of balances)
-4. **Unilateral Changes** (Modifying terms or pricing without direct notice)
-5. **Dispute & Arbitration** (Mandatory binding arbitration & class action waivers)
-6. **Liability Limitations** (Zero liability disclaimers, micro-caps like $10 or 30-day fees)
-7. **Unfair Terms** (Broad data exploitation, perpetual copyright forfeitures, immediate unilateral termination)
-
-### 3. Professional Classical Aesthetic (White & Pastel Green)
-* **Classical Editorial Typography**: Styled with Google Fonts **Playfair Display** (graceful curved serif headings, italic brand emblem, and authentic legal parchment quote blocks) paired with clean, ultra-readable **Plus Jakarta Sans** for interface copy.
-* **White & Pastel Green Palette**: Clean porcelain white cards with soft pastel sage accents (`#eaf3ec`, `#285439`), subtle elevated drop shadows, and delicate borders.
-* **Refined Risk Badges**: Color-coded indicators with distinct styling:
-  * 🔴 **High Risk**: Wine crimson (`#991b1b`) on rose blush (`#fef2f2`)
-  * 🟡 **Medium Risk**: Antique amber (`#92400e`) on warm cream (`#fffbeb`)
-  * 🟢 **Low Risk**: Sage green (`#166534`) on soft mint (`#f0fdf4`)
-* **Iconic Retro Logo**: Features the legendary pixel-art Contra emblem across all icon resolutions and UI headers.
-* **Flagged Provisions Accordion**: Expandable cards showing plain-English translation, verbatim quote, and legal rationale, with real-time risk filter tabs (*All*, *High*, *Med*, *Low*).
-* **Exporting & Caching**: One-click **"Copy Analysis Report"** outputs clean Markdown; analyses are automatically cached in `chrome.storage.local` indexed by URL to prevent redundant API calls.
+> **The fine print shouldn't be a trap.**
 
 ---
 
-## 📁 Project Architecture
+## ✦ Features at a Glance
 
-```
+| Feature | Description |
+|---|---|
+| Hybrid Extraction | Combines intelligent DOM scraping with screenshot-based vision analysis |
+| AI-Powered Analysis | Uses Groq and Gemini models to identify potentially unfair contractual terms |
+| Seven Risk Categories | Detects problematic clauses involving billing, refunds, liability, arbitration, and more |
+| Risk Classification | Categorizes flagged provisions as High, Medium, or Low risk |
+| Plain-English Explanations | Explains what each clause means and why it matters |
+| Verbatim Evidence | Displays the original contractual language alongside each finding |
+| Local Caching | Stores analyses locally to reduce redundant API requests |
+| Markdown Export | Copies the complete analysis report in a clean, portable format |
+| Privacy-Conscious Design | Stores API credentials and cached reports in browser-managed storage |
+
+---
+
+## 01 — Intelligent Document Extraction
+
+Contra uses a two-tier extraction pipeline designed to handle real-world legal pages.
+
+### Tier 1 · DOM Text Extraction
+
+Contra intelligently identifies relevant document content using semantic HTML elements and common legal-document selectors, including:
+
+- `<main>` and `<article>`
+- `.terms` and `.legal`
+- `#tos` and related content containers
+
+The extraction process deep-clones the DOM, removes irrelevant interface elements, and preserves meaningful document structure.
+
+**Noise filtering includes:**
+- Navigation bars, headers, and footers
+- Cookie consent banners and overlays
+- OneTrust and CookieNotice elements
+- Modals, scripts, and unrelated interface content
+
+### Tier 2 · Vision-Powered Fallback
+
+When clean text extraction produces fewer than **200 words by default**, Contra can capture the visible browser viewport and submit the screenshot to a compatible multimodal model.
+
+This fallback is designed for pages containing:
+
+- Embedded documents and PDFs
+- iFrames and Shadow DOM content
+- Scrollable legal-document overlays
+- Canvas-rendered text
+- Other visually accessible but difficult-to-extract content
+
+Supported vision providers include Groq-hosted multimodal models and Google Gemini Flash.
+
+### Self-Healing Fallback
+
+If vision analysis fails or is unsupported by the selected model, Contra falls back to available DOM text extraction instead of abandoning the analysis entirely.
+
+### Manual Vision Mode
+
+Users can explicitly select **👁️ Vision** to trigger screenshot-based analysis whenever visual extraction is preferable.
+
+---
+
+## 02 — Deep Contractual Risk Analysis
+
+Contra examines contractual language across seven consumer-protection categories.
+
+### 1. Automatic Renewal
+
+Identifies potentially problematic renewal and billing mechanisms.
+
+- Hidden evergreen renewal provisions
+- Aggressive renewal terms
+- Unreasonably restrictive cancellation windows
+- Advance-notice requirements, including certified-mail clauses
+
+### 2. Additional Charges
+
+Surfaces unexpected or potentially excessive financial obligations.
+
+- Hidden surcharges
+- Chargeback penalties
+- Cancellation fees
+- Additional contractual charges
+
+### 3. Refund Restrictions
+
+Highlights provisions that may limit a consumer's ability to recover payments.
+
+- Strict no-refund policies
+- Forfeiture of unused balances
+- Restrictive refund eligibility conditions
+
+### 4. Unilateral Changes
+
+Examines whether a company reserves broad powers to change contractual terms.
+
+- Pricing changes without direct notice
+- Unilateral amendments to the agreement
+- Changes to service conditions with limited safeguards
+
+### 5. Disputes & Arbitration
+
+Identifies provisions that may restrict how consumers resolve disputes.
+
+- Mandatory binding arbitration
+- Class-action waivers
+- Restrictions on court proceedings
+- Contractual dispute-resolution requirements
+
+### 6. Liability Limitations
+
+Flags provisions that may significantly limit a company's responsibility.
+
+- Broad disclaimers of liability
+- Extremely low liability caps, such as $10
+- Caps tied to short periods of subscription fees
+- Restrictions on available remedies
+
+### 7. Unfair Terms
+
+Detects other provisions that may create a significant imbalance between the company and the consumer.
+
+- Broad data exploitation rights
+- Perpetual or extensive copyright licenses
+- Immediate unilateral termination rights
+- Excessively broad contractual permissions
+
+**Every finding is presented with three essential elements:**
+
+1. **Plain-English explanation** — what the clause means in practice.
+2. **Original quotation** — the contractual language supporting the finding.
+3. **Legal rationale** — why the provision may be concerning.
+
+*Risk classifications are informational assessments, not definitive judgments of legality or enforceable legal advice.*
+
+---
+
+## 03 — A Classical Editorial Interface
+
+Contra pairs the seriousness of legal documents with a refined, minimal interface.
+
+### Visual Identity
+
+**Design direction:** Classical editorial typography meets modern consumer technology.
+
+| Element | Design specification |
+|---|---|
+| Primary background | Porcelain white |
+| Accent background | Pastel sage `#eaf3ec` |
+| Primary green | Deep forest `#285439` |
+| Heading typography | Playfair Display |
+| Interface typography | Plus Jakarta Sans |
+| Cards | White surfaces with delicate borders |
+| Elevation | Subtle, restrained drop shadows |
+| Branding | Retro pixel-art Contra emblem |
+
+### Risk Indicators
+
+Each risk level has a distinct, accessible visual treatment.
+
+| Level | Foreground | Background |
+|---|---|---|
+| 🔴 High | `#991b1b` | `#fef2f2` |
+| 🟡 Medium | `#92400e` | `#fffbeb` |
+| 🟢 Low | `#166534` | `#f0fdf4` |
+
+### Interactive Analysis Dashboard
+
+The popup interface includes:
+
+- A branded Contra banner
+- A summary of key findings and takeaways
+- Expandable cards for flagged contractual provisions
+- Risk-filter tabs: **All · High · Med · Low**
+- Original quotations and contextual explanations
+- A one-click **Copy Analysis Report** action
+- Access to provider configuration and extension settings
+
+The result is an interface that feels closer to a carefully typeset legal publication than a conventional browser utility.
+
+---
+
+## 04 — AI Providers & Models
+
+Contra supports two configurable AI providers.
+
+### Groq Platform
+
+Designed for fast inference using Groq-hosted language models.
+
+**Configuration**
+- API endpoint: `https://api.groq.com/openai/v1`
+- Credential format: `gsk_...`
+- Model discovery through the provider's models endpoint
+- Configurable text-analysis and vision models
+
+| Model | Intended role |
+|---|---|
+| `openai/gpt-oss-120b` | High-capability contractual analysis |
+| `openai/gpt-oss-20b` | Lightweight, fast analysis |
+| `qwen/qwen3.8-27b` | Vision-enabled extraction, where supported |
+
+### Google Gemini
+
+Designed for native multimodal processing and document analysis.
+
+**Configuration**
+- Provider: Google Gemini API
+- Default model: `gemini-2.5-flash`
+- Credential format: `AIzaSy...`
+- Native image input for vision-based extraction
+
+### Structured AI Responses
+
+Contra uses structured-output constraints and JSON schema validation to keep model responses consistent with the extension's expected analysis format.
+
+This enables predictable rendering of findings, risk levels, original quotations, plain-English explanations, and supporting rationale.
+
+> **Model availability matters.** Provider access, model identifiers, multimodal capabilities, and structured-output support can vary by account and API version. Configure and verify the models actually available to your API key.
+
+---
+
+## 05 — Project Architecture
+
+```text
 Contrat Ext/
-├── manifest.json              # Manifest V3 setup (activeTab, scripting, storage, <all_urls>)
-├── icons/                     # Multi-resolution pixel-art Contra icons
-│   ├── icon-16.png            # 16x16 toolbar icon
-│   ├── icon-32.png            # 32x32 retina toolbar icon
-│   ├── icon-48.png            # 48x48 extensions management icon
-│   ├── icon-128.png           # 128x128 store / high-res icon
-│   └── contra-logo.png        # 512x512 original source emblem
+│
+├── manifest.json
+│   └── Manifest V3 configuration and permissions
+│
+├── icons/
+│   ├── icon-16.png
+│   ├── icon-32.png
+│   ├── icon-48.png
+│   ├── icon-128.png
+│   └── contra-logo.png
+│
 ├── popup/
-│   ├── popup.html             # Classical UI: Crux banner, Risk badges, Takeaways & Accordion
-│   ├── popup.css              # White & pastel sage green styling with Playfair Display
-│   └── popup.js               # UI controller, hybrid extraction pipeline & local caching
+│   ├── popup.html
+│   ├── popup.css
+│   └── popup.js
+│       └── Popup interface, extraction orchestration,
+│           risk filters, and local caching
+│
 ├── scripts/
-│   ├── content.js             # DOM Extractor & Cleaner (noise filtering & structure preservation)
-│   └── background.js          # Service Worker (screenshot capture, Groq/Gemini API, caching)
+│   ├── content.js
+│   │   └── DOM extraction, noise removal,
+│   │       and document-structure preservation
+│   │
+│   └── background.js
+│       └── Service worker, screenshot capture,
+│           AI API requests, and caching
+│
 ├── options/
-│   ├── options.html           # Settings dashboard for Groq & Gemini API keys
-│   ├── options.css            # Classical white & pastel green settings layout
-│   └── options.js             # Direct in-page verification, model discovery & cache manager
+│   ├── options.html
+│   ├── options.css
+│   └── options.js
+│       └── Provider settings, credential verification,
+│           model discovery, and cache management
+│
 └── test/
-    └── sample_tos.html        # Comprehensive mock ToS page for immediate offline/local testing
+    └── sample_tos.html
+        └── Sample legal document for local testing
 ```
+
+### Component Responsibilities
+
+| Component | Responsibility |
+|---|---|
+| `manifest.json` | Declares extension metadata, permissions, and service-worker configuration |
+| `popup/` | Displays analysis results and manages user interactions |
+| `scripts/content.js` | Extracts relevant legal text from the active page |
+| `scripts/background.js` | Coordinates screenshots, AI requests, and background operations |
+| `options/` | Manages API credentials, model settings, and cache controls |
+| `test/` | Provides a controlled environment for testing extraction and analysis |
 
 ---
 
-## 🚀 Installation & Setup
+## 06 — Installation & Setup
 
-### Step 1: Load Unpacked Extension into Chrome
-1. Open Google Chrome and navigate to:
-   ```
-   chrome://extensions/
-   ```
-2. Toggle on **"Developer mode"** in the top right corner.
-3. Click the **"Load unpacked"** button in the top left.
-4. Select the project folder:
-   ```
+### Prerequisites
+
+- Google Chrome or a compatible Chromium-based browser
+- A local copy of the Contra project
+- A Groq API key or Google Gemini API key
+- Access to at least one compatible model
+
+### Step 1 · Load the Extension
+
+1. Open Chrome and navigate to `chrome://extensions/`.
+2. Enable **Developer mode**.
+3. Select **Load unpacked**.
+4. Choose the project directory:
+
+   ```text
    /home/rhythm/Projects/Contrat Ext
    ```
-5. Pin **Contra** to your Chrome toolbar for easy access!
+
+5. Pin Contra to the browser toolbar.
+
+### Step 2 · Configure Groq
+
+1. Visit the [Groq Console](https://console.groq.com/keys).
+2. Generate an API key.
+3. Open Contra's settings.
+4. Select **Groq Platform**.
+5. Paste the key and select **Test Connection**.
+6. Verify the accessible models and configure the text and vision models.
+7. Select **Save Settings**.
+
+### Step 3 · Configure Google Gemini
+
+Alternatively:
+
+1. Visit [Google AI Studio](https://aistudio.google.com/app/apikey).
+2. Generate a Gemini API key.
+3. Open Contra's settings.
+4. Select **Google Gemini**.
+5. Enter the key and choose the supported model.
+6. Save the configuration.
+
+### Step 4 · Test the Extension
+
+1. Open the local test document:
+
+   ```text
+   test/sample_tos.html
+   ```
+
+2. Open Contra from the Chrome toolbar.
+3. Run an analysis.
+4. Inspect the extracted content and flagged provisions.
+5. Test the risk filters and report-copying functionality.
+6. Verify that a repeated analysis can reuse the cached result.
+
+For a meaningful end-to-end test, also evaluate a live legal page containing dynamically rendered content or an embedded document.
 
 ---
 
-### Step 2: Configure Your API Key
+## 07 — Security & Privacy
 
-#### Option A: Groq Platform (Ultra-Fast Inference)
-1. Get a free API key from the [GroqCloud Console](https://console.groq.com/keys).
-2. Open Contra Settings (click the **⚙️ Settings** icon in the popup, or right-click extension & select **Options**).
-3. Select **Groq Platform**, paste your `gsk_...` key, and click **Test Connection**:
-   * It will verify your key directly via `GET /openai/v1/models` and discover all accessible models.
-   * Default Text Model: `openai/gpt-oss-120b` (Recommended 120B reasoning model at 500 T/s)
-   * Ultra-Fast Alternative: `openai/gpt-oss-20b` (1,000 T/s)
-   * Active Vision Model: `qwen/qwen3.8-27b`
-4. Click **Save Settings**.
+Contra is designed to minimize unnecessary data handling and third-party dependencies.
 
-#### Option B: Google Gemini Flash (Full Multimodal Support)
-1. Get a free API key from [Google AI Studio](https://aistudio.google.com/app/apikey).
-2. In Contra Settings, select **Google Gemini**, paste your `AIzaSy...` key, and save.
-   * Default Model: `gemini-2.5-flash` (Native multimodal vision OCR and text analysis on all keys)
+### Browser-Managed Storage
+
+- **`chrome.storage.sync`** stores API credentials and user configuration.
+- **`chrome.storage.local`** stores cached analysis results indexed by URL.
+- Analysis caching is performed locally in the browser.
+
+### Manifest V3
+
+Contra uses a Manifest V3 architecture with a service worker and native `fetch()` requests. It does not rely on `eval()` or dynamically evaluated executable code.
+
+### External API Requests
+
+When an analysis is requested, relevant extracted text or screenshots may be sent to the configured AI provider for processing. These requests are necessary for remote model inference.
+
+### Security Considerations
+
+- API keys are not transmitted to unrelated tracking services by the intended application design.
+- Browser storage is not equivalent to encrypted secret storage.
+- Website content sent to an AI provider may contain sensitive information.
+- URL-indexed caches should be reviewed for sensitive query parameters and personally identifiable information.
+- Extension permissions should be limited to those required for the selected extraction and screenshot workflows.
+
+**Privacy principle:** Keep data collection minimal, make external processing explicit, and give users control over credentials and cached reports.
 
 ---
 
-## 🔒 Security & Privacy
-* **Client-Side Storage**: All API keys are securely stored in `chrome.storage.sync` and never transmitted to third-party tracking servers.
-* **Local Caching**: Contract analyses are indexed strictly within `chrome.storage.local` on your browser.
-* **Manifest V3 Compliant**: Uses native fetch, modern service workers, and zero dynamic code evaluation (`eval` is never used).
+## 08 — Testing & Reliability
+
+Before considering a release production-ready, validate the following scenarios:
+
+- [ ] Clean extraction from standard HTML legal pages
+- [ ] Removal of cookie banners and unrelated interface content
+- [ ] Correct handling of pages below the word-count threshold
+- [ ] Screenshot capture and multimodal analysis
+- [ ] Graceful fallback when a vision model is unavailable
+- [ ] JSON schema validation and malformed-response handling
+- [ ] API rate limits, network failures, and authentication errors
+- [ ] Accurate association of quotations with extracted source text
+- [ ] Risk filtering across all severity levels
+- [ ] Cache hits, cache invalidation, and URL normalization
+- [ ] Credential persistence and provider switching
+- [ ] Permission behavior on restricted browser pages
+- [ ] Privacy review of cached content and external API payloads
+
+---
+
+## 09 — Roadmap
+
+Potential future improvements include:
+
+- **Clause comparison:** Compare two versions of a legal agreement and identify material changes.
+- **Policy history:** Track changes in a website's Terms of Service over time.
+- **Evidence confidence:** Distinguish directly quoted provisions from model-generated inferences.
+- **Jurisdiction-aware analysis:** Provide jurisdiction-specific context with appropriate legal sources.
+- **Document coverage indicators:** Show how much of a policy was successfully extracted.
+- **PDF support:** Improve extraction from complete documents rather than visible viewport content alone.
+- **Local inference:** Explore compatible local models for users who prefer not to transmit documents to remote APIs.
+- **Accessibility improvements:** Add keyboard navigation, screen-reader support, and stronger non-color risk indicators.
+
+---
+
+## 10 — Important Disclaimer
+
+Contra is a consumer-awareness and contract-analysis tool. Its findings are generated by AI and may contain omissions, inaccuracies, or incorrect interpretations.
+
+A provision flagged as concerning is not necessarily illegal, unenforceable, or unfair under every applicable law. Likewise, the absence of a warning does not guarantee that an agreement is safe.
+
+Users should review the original agreement and consult a qualified legal professional when making consequential legal decisions.
+
+---
+
+## Built to Make the Fine Print Understandable
+
+Contra brings together browser automation, document extraction, multimodal AI, structured analysis, and thoughtful interface design to make complex contractual language easier to understand.
+
+**Read the terms. See the risks. Make informed decisions.**
+
+*Contra — Clarity before consent.*
