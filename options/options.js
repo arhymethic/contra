@@ -60,8 +60,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     provider: 'groq',
     groqApiKey: '',
     geminiApiKey: '',
-    groqTextModel: 'openai/gpt-oss-120b',
-    groqVisionModel: 'llama-3.2-11b-vision-preview',
+    groqTextModel: 'openai/gpt-oss-20b',
+    groqVisionModel: 'qwen/qwen3.8-27b',
     geminiModel: 'gemini-2.5-flash',
     wordThreshold: 200,
     cacheEnabled: true

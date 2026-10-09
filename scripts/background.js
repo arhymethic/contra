@@ -46,7 +46,7 @@ const DEFAULT_CONFIG = {
   provider: 'groq', // 'groq' or 'gemini'
   groqApiKey: '',
   geminiApiKey: '',
-  groqTextModel: 'openai/gpt-oss-120b',
+  groqTextModel: 'openai/gpt-oss-20b',
   groqVisionModel: 'qwen/qwen3.8-27b',
   geminiModel: 'gemini-2.5-flash',
   wordThreshold: 200,
@@ -271,11 +271,11 @@ async function callGroqAPI({ apiKey, mode, text, screenshotUrl, config }) {
   const isVision = mode === 'SCREENSHOT_VISION';
   let model = isVision
     ? (config.groqVisionModel || 'qwen/qwen3.8-27b')
-    : (config.groqTextModel || 'openai/gpt-oss-120b');
+    : (config.groqTextModel || 'openai/gpt-oss-20b');
 
-  // If the model was legacy enterprise llama, auto-switch to active openai/gpt-oss-120b
+  // If the model was legacy enterprise llama, auto-switch to active openai/gpt-oss-20b
   if (!isVision && (model === 'llama-3.1-8b-instant' || model === 'llama-3.3-70b-versatile')) {
-    model = 'openai/gpt-oss-120b';
+    model = 'openai/gpt-oss-20b';
   }
 
   // If the model was decommissioned llama vision, auto-switch to qwen/qwen3.8-27b
