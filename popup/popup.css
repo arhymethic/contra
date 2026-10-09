@@ -1,40 +1,40 @@
-/* Contra Popup CSS - Classical Professional (White & Pastel Green Theme) */
+/* Contra Popup CSS - Classical Editorial (Obsidian Black & Emerald Green Theme) */
 :root {
-  --bg-page: #fbfdfb;
-  --bg-surface: #ffffff;
-  --bg-surface-elevated: #f4f8f5;
-  --bg-surface-tint: #edf4ef;
-  --bg-input: #ffffff;
+  --bg-page: #090d0b;
+  --bg-surface: #111713;
+  --bg-surface-elevated: #16211a;
+  --bg-surface-tint: #131d16;
+  --bg-input: #0c120e;
 
-  --border-light: #e5ece6;
-  --border-subtle: #d8e5db;
-  --border-medium: #c2d6c7;
-  --border-focus: #2d5a3f;
+  --border-light: #1a291e;
+  --border-subtle: #223628;
+  --border-medium: #2c4634;
+  --border-focus: #22c55e;
 
-  --text-primary: #192b1f;
-  --text-secondary: #425749;
-  --text-muted: #6b8072;
-  --text-brand: #224730;
+  --text-primary: #ecfdf5;
+  --text-secondary: #9ec2a8;
+  --text-muted: #61806a;
+  --text-brand: #4ade80;
 
-  --accent-forest: #285439;
-  --accent-forest-dark: #1b3d27;
-  --accent-forest-hover: #1f422d;
-  --accent-pastel: #eaf3ec;
-  --accent-pastel-hover: #dcece0;
-  --accent-sage: #50785d;
-  --accent-gold: #b38628;
+  --accent-forest: #22c55e;
+  --accent-forest-dark: #16a34a;
+  --accent-forest-hover: #4ade80;
+  --accent-pastel: #132e1c;
+  --accent-pastel-hover: #193c24;
+  --accent-sage: #34d399;
+  --accent-gold: #fbbf24;
 
-  --risk-high: #991b1b;
-  --risk-high-bg: #fef2f2;
-  --risk-high-border: #fca5a5;
+  --risk-high: #f87171;
+  --risk-high-bg: #281114;
+  --risk-high-border: #7f1d1d;
 
-  --risk-med: #92400e;
-  --risk-med-bg: #fffbeb;
-  --risk-med-border: #fcd34d;
+  --risk-med: #fbbf24;
+  --risk-med-bg: #281a07;
+  --risk-med-border: #78350f;
 
-  --risk-low: #166534;
-  --risk-low-bg: #f0fdf4;
-  --risk-low-border: #86efac;
+  --risk-low: #4ade80;
+  --risk-low-bg: #0d2816;
+  --risk-low-border: #166534;
 
   --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
   --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -45,8 +45,8 @@
   --radius-md: 11px;
   --radius-lg: 15px;
 
-  --shadow-subtle: 0 2px 10px rgba(36, 75, 48, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
-  --shadow-card: 0 4px 18px rgba(36, 75, 48, 0.06), 0 1px 3px rgba(0, 0, 0, 0.03);
+  --shadow-subtle: 0 2px 10px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-card: 0 6px 24px rgba(0, 0, 0, 0.6), 0 1px 4px rgba(34, 197, 94, 0.08);
   --transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -66,7 +66,7 @@ body.classical-theme {
   overflow-y: auto;
   line-height: 1.48;
   background-image: 
-    linear-gradient(180deg, #f0f6f2 0%, #fbfdfb 220px, #ffffff 100%);
+    linear-gradient(180deg, #0d1510 0%, #090d0b 220px, #070a08 100%);
 }
 
 /* Custom Pastel Sage Scrollbar */
@@ -179,12 +179,13 @@ body.classical-theme {
 }
 
 .mode-badge.vision {
-  color: #1e5a3a;
-  background: #e4f2ea;
-  border-color: #bcdbc8;
+  color: #34d399;
+  background: #132b1d;
+  border-color: #1e4a2d;
 }
 .mode-badge.vision .mode-dot {
-  background-color: #1e5a3a;
+  background-color: #34d399;
+  box-shadow: 0 0 6px rgba(52, 211, 153, 0.5);
 }
 
 .icon-btn {
@@ -210,8 +211,8 @@ body.classical-theme {
 
 /* API Key Alert Banner */
 .api-key-banner {
-  background: #fef7f6;
-  border: 1px solid #fecaca;
+  background: #251114;
+  border: 1px solid #7f1d1d;
   border-radius: var(--radius-md);
   padding: 12px 14px;
   display: flex;
@@ -232,19 +233,19 @@ body.classical-theme {
 
 .banner-body strong {
   font-size: 13px;
-  color: #991b1b;
+  color: #f87171;
 }
 
 .banner-body p {
   font-size: 11.5px;
-  color: #573333;
+  color: #fca5a5;
   line-height: 1.35;
 }
 
 .banner-btn {
   margin-top: 5px;
   align-self: flex-start;
-  background: #b91c1c;
+  background: #dc2626;
   color: #fff;
   border: none;
   font-size: 11px;
@@ -301,9 +302,9 @@ body.classical-theme {
 }
 
 .legal-badge.detected {
-  background: #e8f5ec;
-  color: #166534;
-  border-color: #bbf7d0;
+  background: #0d2816;
+  color: #4ade80;
+  border-color: #166534;
 }
 
 /* Scan Action Card */
@@ -330,8 +331,8 @@ body.classical-theme {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #15803d;
-  box-shadow: 0 0 6px rgba(21, 128, 61, 0.4);
+  background: #22c55e;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
 }
 
 .scan-btn-group {
@@ -345,21 +346,22 @@ body.classical-theme {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: linear-gradient(135deg, var(--accent-forest), var(--accent-forest-dark));
-  color: #ffffff;
-  border: none;
+  background: linear-gradient(135deg, #22c55e, #15803d);
+  color: #06150a;
+  border: 1px solid rgba(34, 197, 94, 0.3);
   padding: 11px 16px;
   border-radius: var(--radius-md);
   font-size: 13.5px;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(36, 75, 48, 0.22);
+  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.28), 0 1px 3px rgba(0, 0, 0, 0.4);
   transition: var(--transition);
 }
 
 .btn-scan:hover {
-  background: linear-gradient(135deg, var(--accent-forest-dark), #142e1d);
+  background: linear-gradient(135deg, #4ade80, #16a34a);
   transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.35);
 }
 
 .btn-scan:disabled {
@@ -410,7 +412,7 @@ body.classical-theme {
   width: 46px;
   height: 46px;
   border-radius: 50%;
-  border: 3px solid #e1eee4;
+  border: 3px solid #1a2a1f;
   border-top-color: var(--accent-forest);
   animation: spin 0.9s cubic-bezier(0.5, 0.1, 0.4, 0.9) infinite;
 }
@@ -435,7 +437,7 @@ body.classical-theme {
 .loading-progress-bar {
   width: 100%;
   height: 4px;
-  background: #e7f0e9;
+  background: #18281d;
   border-radius: 2px;
   overflow: hidden;
   margin-top: 4px;
@@ -444,15 +446,15 @@ body.classical-theme {
 .progress-fill {
   height: 100%;
   width: 30%;
-  background: linear-gradient(90deg, var(--accent-forest), #5a946e);
+  background: linear-gradient(90deg, #16a34a, #4ade80);
   border-radius: 2px;
   transition: width 0.4s ease;
 }
 
 /* Error State */
 .error-state {
-  background: #fdf5f5;
-  border: 1px solid #fca5a5;
+  background: #241114;
+  border: 1px solid #7f1d1d;
   border-radius: var(--radius-lg);
   padding: 24px 18px;
   display: flex;
@@ -471,12 +473,12 @@ body.classical-theme {
   font-family: var(--font-serif);
   font-size: 16px;
   font-weight: 700;
-  color: #991b1b;
+  color: #f87171;
 }
 
 .error-message {
   font-size: 12px;
-  color: #603030;
+  color: #fca5a5;
   line-height: 1.45;
 }
 
@@ -495,13 +497,13 @@ body.classical-theme {
 }
 
 .btn-retry {
-  background: #b91c1c;
+  background: #dc2626;
   color: #fff;
   border: none;
 }
 
 .btn-settings-link {
-  background: var(--bg-surface);
+  background: var(--bg-surface-elevated);
   color: var(--text-secondary);
   border: 1px solid var(--border-medium);
 }
@@ -613,7 +615,7 @@ body.classical-theme {
   color: var(--risk-med);
 }
 .risk-pill.Medium .risk-pill-dot {
-  background-color: #d97706;
+  background-color: #fbbf24;
 }
 
 .risk-pill.Low {
@@ -729,8 +731,9 @@ body.classical-theme {
 
 .filter-btn.active {
   background: var(--accent-forest);
-  color: #fff;
+  color: #06150a;
   border-color: var(--accent-forest);
+  font-weight: 800;
 }
 
 /* Key Takeaways */
@@ -788,13 +791,13 @@ body.classical-theme {
 }
 
 .accordion-item.risk-High {
-  border-left: 3.5px solid #dc2626;
+  border-left: 3.5px solid #ef4444;
 }
 .accordion-item.risk-Medium {
-  border-left: 3.5px solid #d97706;
+  border-left: 3.5px solid #f59e0b;
 }
 .accordion-item.risk-Low {
-  border-left: 3.5px solid #16a34a;
+  border-left: 3.5px solid #22c55e;
 }
 
 .accordion-header {
@@ -804,7 +807,7 @@ body.classical-theme {
   align-items: center;
   cursor: pointer;
   user-select: none;
-  background: #ffffff;
+  background: var(--bg-surface);
   transition: background 0.15s;
 }
 
@@ -906,17 +909,17 @@ body.classical-theme {
 }
 
 .plain-english-box {
-  background: #f4f9f5;
-  border: 1px solid #dbeae0;
+  background: #0d2114;
+  border: 1px solid #1a3c26;
   border-radius: var(--radius-sm);
   padding: 10px 11px;
   font-size: 12.5px;
   line-height: 1.48;
-  color: #1a3824;
+  color: #d1fae5;
 }
 
 .verbatim-quote-box {
-  background: #fafdfa;
+  background: #0a120c;
   border: 1px solid var(--border-subtle);
   border-left: 3px solid var(--accent-sage);
   border-radius: var(--radius-sm);
@@ -927,7 +930,7 @@ body.classical-theme {
   font-family: var(--font-serif);
   font-size: 12px;
   line-height: 1.48;
-  color: #2b3d31;
+  color: #9ec2a8;
   font-style: italic;
   white-space: pre-wrap;
   word-break: break-word;

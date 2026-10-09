@@ -149,32 +149,32 @@ Detects other provisions that may create a significant imbalance between the com
 
 ## 03 A Classical Editorial Interface
 
-Contra pairs the seriousness of legal documents with a refined, minimal interface.
+Contra pairs the seriousness of legal documents with a refined, obsidian black and emerald green interface.
 
 ### Visual Identity
 
-**Design direction:** Classical editorial typography meets modern consumer technology.
+**Design direction:** Classical editorial typography meets modern obsidian black and emerald green aesthetics.
 
 | Element | Design specification |
 |---|---|
-| Primary background | Porcelain white |
-| Accent background | Pastel sage `#eaf3ec` |
-| Primary green | Deep forest `#285439` |
-| Heading typography | Playfair Display |
+| Primary background | Obsidian black `#090d0b` |
+| Card surfaces | Deep charcoal `#111713` |
+| Accent green | Emerald `#22c55e` |
+| Accent mint | Luminescent mint `#34d399` |
+| Heading typography | Playfair Display (Serif) |
 | Interface typography | Plus Jakarta Sans |
-| Cards | White surfaces with delicate borders |
-| Elevation | Subtle, restrained drop shadows |
+| Elevation | Subtle emerald-tinted glows & obsidian drop shadows |
 | Branding | Retro pixel-art Contra emblem |
 
 ### Risk Indicators
 
-Each risk level has a distinct, accessible visual treatment.
+Each risk level has a distinct, high-contrast visual treatment optimized for dark backgrounds.
 
 | Level | Foreground | Background |
 |---|---|---|
-| 🔴 High | `#991b1b` | `#fef2f2` |
-| 🟡 Medium | `#92400e` | `#fffbeb` |
-| 🟢 Low | `#166534` | `#f0fdf4` |
+| 🔴 High | `#f87171` | `#281114` |
+| 🟡 Medium | `#fbbf24` | `#281a07` |
+| 🟢 Low | `#4ade80` | `#0d2816` |
 
 ### Interactive Analysis Dashboard
 
