@@ -300,15 +300,13 @@ Contrat Ext/
 ### Step 1 · Load the Extension
 
 1. Open Chrome and navigate to `chrome://extensions/`.
-2. Enable **Developer mode**.
+2. Enable **Developer mode** (toggle in the top-right corner).
 3. Select **Load unpacked**.
-4. Choose the project directory:
+4. Choose the folder that **directly contains `manifest.json`**:
 
-   ```text
-   /home/rhythm/Projects/Contrat Ext
-   ```
+   > **Windows Tip**: If you downloaded the project as a `.zip` from GitHub, make sure to extract it first (Right-click &rarr; *Extract All...*). In Chrome, navigate inside the extracted folder and select the directory that directly contains `manifest.json`. (Selecting the outer wrapper folder or an unextracted zip will cause a *"Could not load manifest"* error).
 
-5. Pin Contra to the browser toolbar.
+5. Pin **Contra** to your browser toolbar.
 
 ### Step 2 · Configure Groq
 

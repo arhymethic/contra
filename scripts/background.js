@@ -157,6 +157,113 @@ function extractJsonFromText(responseText) {
 }
 
 /**
+ * Intelligently prune long legal documents to fit safely within LLM rate limits (TPM limits)
+ * while preserving high-risk contractual clauses.
+ */
+function pruneLegalDocument(text, maxChars = 16000) {
+  if (!text || text.length <= maxChars) {
+    return text || '';
+  }
+
+  // Legal risk keywords covering the 7 core categories
+  const RISK_KEYWORDS = [
+    /arbitrat/i,
+    /class\s*action/i,
+    /jury\s*trial/i,
+    /dispute/i,
+    /auto[- ]?renew/i,
+    /subscription/i,
+    /recurring/i,
+    /billing/i,
+    /refund/i,
+    /cancell/i,
+    /chargeback/i,
+    /fee/i,
+    /penalty/i,
+    /surcharge/i,
+    /unilateral/i,
+    /sole\s*discretion/i,
+    /without\s*(prior\s*)?notice/i,
+    /amend(ment)?/i,
+    /modif(y|ication)/i,
+    /liability/i,
+    /damages/i,
+    /warranty/i,
+    /disclaimer/i,
+    /indemn/i,
+    /waiv/i,
+    /perpetual/i,
+    /royalty[- ]free/i,
+    /intellectual\s*property/i,
+    /track(ing)?/i,
+    /sell.*(personal|data)/i,
+    /terminat/i,
+    /suspend/i,
+    /governing\s*law/i,
+    /jurisdiction/i
+  ];
+
+  // Preserve the opening 3,000 characters (preamble, definitions, agreement scope)
+  const preamble = text.slice(0, 3000);
+  const remaining = text.slice(3000);
+
+  // Split remainder into paragraphs
+  const paragraphs = remaining.split(/\n\s*\n/);
+  const highPriority = [];
+  const normalPriority = [];
+
+  for (const para of paragraphs) {
+    const trimmed = para.trim();
+    if (trimmed.length < 30) continue; // Skip fragments or short headers
+
+    const isRisk = RISK_KEYWORDS.some(rx => rx.test(trimmed));
+    if (isRisk) {
+      highPriority.push(trimmed);
+    } else {
+      normalPriority.push(trimmed);
+    }
+  }
+
+  let assembled = preamble + '\n\n--- [KEY PROVISIONS EXTRACTED FOR COMPLIANCE & RISK ANALYSIS] ---\n\n';
+  let budgetLeft = maxChars - assembled.length - 800; // Leave 800 chars for closing
+
+  // 1. Add high-priority clauses first
+  for (const clause of highPriority) {
+    if (budgetLeft <= 0) break;
+    const clauseText = clause + '\n\n';
+    if (clauseText.length <= budgetLeft) {
+      assembled += clauseText;
+      budgetLeft -= clauseText.length;
+    } else {
+      assembled += clause.slice(0, budgetLeft) + '...\n\n';
+      budgetLeft = 0;
+      break;
+    }
+  }
+
+  // 2. If budget remains, add normal paragraphs
+  if (budgetLeft > 500) {
+    for (const para of normalPriority) {
+      if (budgetLeft <= 0) break;
+      const paraText = para + '\n\n';
+      if (paraText.length <= budgetLeft) {
+        assembled += paraText;
+        budgetLeft -= paraText.length;
+      } else {
+        break;
+      }
+    }
+  }
+
+  // 3. Keep closing section (governing law, opt-out address, etc.)
+  if (text.length > 3500) {
+    assembled += '\n--- [CLOSING PROVISIONS & GOVERNING LAW] ---\n' + text.slice(-600);
+  }
+
+  return assembled;
+}
+
+/**
  * Call Groq Platform API (Ultra-Fast)
  * https://api.groq.com/openai/v1/chat/completions
  */
@@ -202,7 +309,7 @@ async function callGroqAPI({ apiKey, mode, text, screenshotUrl, config }) {
       messages: messages,
       response_format: { type: 'json_object' },
       temperature: 0.1,
-      max_tokens: 3000
+      max_tokens: 2500
     };
 
     let visionResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -254,8 +361,11 @@ async function callGroqAPI({ apiKey, mode, text, screenshotUrl, config }) {
     parsed.analysis_mode_used = 'SCREENSHOT_VISION';
     return parsed;
   } else {
-    // Text mode
-    const truncatedText = text.slice(0, 100000);
+    // Text mode: Prune intelligently to stay safely under Groq's 8,000 TPM limit
+    // For 120b (8k TPM limit), allocate ~16,000 chars (~4,000 tokens) for prompt
+    // For 20b (higher TPM quota), allocate up to 30,000 chars
+    const charBudget = (model === 'openai/gpt-oss-20b') ? 30000 : 16000;
+    const processedText = pruneLegalDocument(text, charBudget);
 
     messages = [
       {
@@ -264,7 +374,7 @@ async function callGroqAPI({ apiKey, mode, text, screenshotUrl, config }) {
       },
       {
         role: 'user',
-        content: `Analyze the following Terms & Conditions / Legal Document text. Set analysis_mode_used to "DOM_TEXT".\n\n--- BEGIN DOCUMENT ---\n${truncatedText}\n--- END DOCUMENT ---`
+        content: `Analyze the following Terms & Conditions / Legal Document text. Set analysis_mode_used to "DOM_TEXT".\n\n--- BEGIN DOCUMENT ---\n${processedText}\n--- END DOCUMENT ---`
       }
     ];
 
@@ -273,7 +383,7 @@ async function callGroqAPI({ apiKey, mode, text, screenshotUrl, config }) {
       messages: messages,
       response_format: { type: 'json_object' },
       temperature: 0.1,
-      max_tokens: 3000
+      max_tokens: 1500 // Lowered from 3000 to prevent TPM quota exhaustion
     };
 
     if (model.includes('gpt-oss') || model.includes('deepseek') || model.includes('qwq')) {
@@ -317,6 +427,76 @@ async function callGroqAPI({ apiKey, mode, text, screenshotUrl, config }) {
       } catch (_) {
         errMessage = errBody || errMessage;
       }
+
+      const isTpmError = errMessage.includes('TPM') ||
+                         errMessage.includes('tokens per minute') ||
+                         errMessage.includes('Limit 8000') ||
+                         errMessage.includes('Request too large') ||
+                         response.status === 413 ||
+                         response.status === 429;
+
+      // Auto-recovery 1: If 120b hit TPM limit, auto-fallback to openai/gpt-oss-20b
+      if (isTpmError && model === 'openai/gpt-oss-120b') {
+        console.warn('[Contra] 8k TPM limit reached on 120b. Auto-recovering with openai/gpt-oss-20b...');
+        try {
+          const fallbackResult = await callGroqAPI({
+            apiKey,
+            mode: 'DOM_TEXT',
+            text: pruneLegalDocument(text, 14000),
+            screenshotUrl: null,
+            config: { ...config, groqTextModel: 'openai/gpt-oss-20b' }
+          });
+          fallbackResult.overall_summary = `[Note: Automatically analyzed via openai/gpt-oss-20b to stay within Groq free-tier rate limits]\n\n${fallbackResult.overall_summary}`;
+          return fallbackResult;
+        } catch (fallbackErr) {
+          console.warn('[Contra] Fallback to openai/gpt-oss-20b failed:', fallbackErr);
+        }
+      }
+
+      // Auto-recovery 2: Retry with ultra-compact text budget (7,500 chars) & 1,000 max_tokens
+      if (isTpmError && !requestPayload.__isRetry) {
+        console.warn('[Contra] Retrying with compact contract budget (7.5k chars)...');
+        try {
+          const compactText = pruneLegalDocument(text, 7500);
+          const retryPayload = {
+            ...requestPayload,
+            __isRetry: true,
+            max_tokens: 1000,
+            messages: [
+              { role: 'system', content: SYSTEM_PROMPT },
+              { role: 'user', content: `Analyze the following Terms & Conditions text. Set analysis_mode_used to "DOM_TEXT".\n\n--- BEGIN DOCUMENT ---\n${compactText}\n--- END DOCUMENT ---` }
+            ]
+          };
+          const retryRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${apiKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(retryPayload)
+          });
+          if (retryRes.ok) {
+            const retryData = await retryRes.json();
+            const retryContent = retryData.choices?.[0]?.message?.content;
+            if (retryContent) {
+              const parsed = extractJsonFromText(retryContent);
+              parsed.analysis_mode_used = 'DOM_TEXT';
+              parsed.overall_summary = `[Note: Analyzed in compact mode to respect Groq free-tier rate limits]\n\n${parsed.overall_summary}`;
+              return parsed;
+            }
+          }
+        } catch (_) {}
+      }
+
+      // If still failing with TPM error, provide a clear, helpful explanation
+      if (isTpmError) {
+        throw new Error(
+          `Groq Free Tier Rate Limit (8,000 tokens/min limit exceeded).\n\n` +
+          `Fix: In Contra Settings (⚙️), switch Text Model to "openai/gpt-oss-20b" (which has a much higher rate limit), ` +
+          `or switch provider to Google Gemini Flash (4M tokens/min free).`
+        );
+      }
+
       throw new Error(errMessage);
     }
 

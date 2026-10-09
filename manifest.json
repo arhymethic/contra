@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "Contra - AI Terms & Conditions Analyzer",
+  "name": "Contra",
   "short_name": "Contra",
   "version": "1.0.0",
-  "description": "Real-time AI contract and Terms of Service analyzer using Groq and Gemini Flash.",
+  "description": "Realtime AI contract and Terms of Service analyzer using API Keys",
   "permissions": [
     "activeTab",
     "scripting",
