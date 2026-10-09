@@ -206,12 +206,12 @@ Designed for fast inference using Groq-hosted language models.
 - Model discovery through the provider's models endpoint
 - Configurable text-analysis and vision models
 
-| Model | Intended role |
-|---|---|
-| `auto` | **Smart Selection (Recommended)** &bull; Dynamically selects optimal high-quota model |
-| `openai/gpt-oss-20b` | High-quota, ultra-fast analysis at 1,000 T/s (ideal for long contracts) |
-| `openai/gpt-oss-120b` | Deep reasoning analysis (8k TPM limit on free tier) |
-| `qwen/qwen3.8-27b` | Vision-enabled screenshot OCR |
+| Model | Mode | Intended role |
+|---|---|---|
+| `auto` | Text & Vision | **Smart Selection (Recommended)** &bull; Automatically selects `openai/gpt-oss-20b` for text and `qwen/qwen3.8-27b` for vision |
+| `openai/gpt-oss-20b` | Text | High-quota, ultra-fast analysis at 1,000 T/s (ideal for long contracts) |
+| `openai/gpt-oss-120b` | Text | Deep reasoning analysis (8k TPM limit on free tier) |
+| `qwen/qwen3.8-27b` | Vision | Multimodal vision screenshot OCR |
 
 ### Google Gemini
 

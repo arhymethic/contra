@@ -61,8 +61,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     groqApiKey: '',
     geminiApiKey: '',
     groqTextModel: 'auto',
-    groqVisionModel: 'qwen/qwen3.8-27b',
-    geminiModel: 'gemini-2.5-flash',
+    groqVisionModel: 'auto',
+    geminiModel: 'auto',
     wordThreshold: 200,
     cacheEnabled: true
   }, (items) => {
@@ -279,10 +279,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Vision models
+    const currentVisionVal = groqVisionModel.value;
     const visionModels = models.filter(m => m.includes('vision') || m.includes('image'));
     visionModels.forEach(m => {
       ensureOptionExists(groqVisionModel, m);
     });
+
+    if (currentVisionVal !== 'auto' && !models.includes(currentVisionVal)) {
+      if (models.includes('qwen/qwen3.8-27b')) {
+        groqVisionModel.value = 'qwen/qwen3.8-27b';
+      } else if (visionModels.length > 0) {
+        groqVisionModel.value = visionModels[0];
+      } else {
+        groqVisionModel.value = 'auto';
+      }
+    }
   }
 
   function showTestStatus(isSuccess, message) {
@@ -298,13 +309,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Determine selected text model
     let selectedTextModel = groqTextModel.value;
     if (selectedTextModel === 'custom') {
-      selectedTextModel = groqCustomTextModel.value.trim() || 'openai/gpt-oss-120b';
+      selectedTextModel = groqCustomTextModel.value.trim() || 'auto';
     }
 
     // Determine selected vision model
     let selectedVisionModel = groqVisionModel.value;
     if (selectedVisionModel === 'custom') {
-      selectedVisionModel = groqCustomVisionModel.value.trim() || 'llama-3.2-11b-vision-preview';
+      selectedVisionModel = groqCustomVisionModel.value.trim() || 'auto';
     }
 
     const settings = {

@@ -47,8 +47,8 @@ const DEFAULT_CONFIG = {
   groqApiKey: '',
   geminiApiKey: '',
   groqTextModel: 'auto',
-  groqVisionModel: 'qwen/qwen3.8-27b',
-  geminiModel: 'gemini-2.5-flash',
+  groqVisionModel: 'auto',
+  geminiModel: 'auto',
   wordThreshold: 200,
   cacheEnabled: true
 };
@@ -341,14 +341,13 @@ async function callGroqAPI({ apiKey, mode, text, screenshotUrl, config }) {
   const isVision = mode === 'SCREENSHOT_VISION';
   let isAutoModel = false;
   let model = isVision
-    ? (config.groqVisionModel || 'qwen/qwen3.8-27b')
+    ? (config.groqVisionModel || 'auto')
     : (config.groqTextModel || 'auto');
 
-  // Handle 'auto' text model selection:
-  // Auto selects openai/gpt-oss-20b for high TPM quota & 1,000 T/s speed on free tier
-  if (!isVision && (model === 'auto' || !model)) {
+  // Handle 'auto' model selection for both text and vision:
+  if (model === 'auto' || !model) {
     isAutoModel = true;
-    model = 'openai/gpt-oss-20b';
+    model = isVision ? 'qwen/qwen3.8-27b' : 'openai/gpt-oss-20b';
   }
 
   // If the model was legacy enterprise llama, auto-switch to active openai/gpt-oss-20b
@@ -601,7 +600,12 @@ async function callGroqAPI({ apiKey, mode, text, screenshotUrl, config }) {
  */
 async function callGeminiAPI({ apiKey, mode, text, screenshotUrl, config }) {
   const isVision = mode === 'SCREENSHOT_VISION';
-  const modelName = config.geminiModel || 'gemini-2.5-flash';
+  let isAutoModel = false;
+  let modelName = config.geminiModel || 'auto';
+  if (modelName === 'auto' || !modelName) {
+    isAutoModel = true;
+    modelName = 'gemini-2.5-flash';
+  }
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
   let contents = [];
@@ -677,6 +681,11 @@ async function callGeminiAPI({ apiKey, mode, text, screenshotUrl, config }) {
 
   const parsed = extractJsonFromText(rawContent);
   parsed.analysis_mode_used = isVision ? 'SCREENSHOT_VISION' : 'DOM_TEXT';
+  if (isAutoModel) {
+    parsed.model_used = `${modelName} (Auto)`;
+  } else {
+    parsed.model_used = modelName;
+  }
   return parsed;
 }
 
