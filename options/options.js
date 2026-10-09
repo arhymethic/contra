@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     provider: 'groq',
     groqApiKey: '',
     geminiApiKey: '',
-    groqTextModel: 'openai/gpt-oss-20b',
+    groqTextModel: 'auto',
     groqVisionModel: 'qwen/qwen3.8-27b',
     geminiModel: 'gemini-2.5-flash',
     wordThreshold: 200,
@@ -79,8 +79,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Auto-migrate legacy or enterprise-only default models to active models
     if (items.groqTextModel === 'llama-3.3-70b-versatile' || items.groqTextModel === 'llama-3.1-8b-instant') {
-      items.groqTextModel = 'openai/gpt-oss-120b';
-      chrome.storage.sync.set({ groqTextModel: 'openai/gpt-oss-120b' });
+      items.groqTextModel = 'auto';
+      chrome.storage.sync.set({ groqTextModel: 'auto' });
     }
 
     // Auto-migrate decommissioned vision models to active qwen/qwen3.8-27b
@@ -268,11 +268,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // If currently selected model was an enterprise one not in their account, auto-switch to a valid active model
-    if (!models.includes(currentTextVal)) {
-      if (models.includes('openai/gpt-oss-120b')) {
-        groqTextModel.value = 'openai/gpt-oss-120b';
-      } else if (models.includes('openai/gpt-oss-20b')) {
+    if (currentTextVal !== 'auto' && !models.includes(currentTextVal)) {
+      if (models.includes('openai/gpt-oss-20b')) {
         groqTextModel.value = 'openai/gpt-oss-20b';
+      } else if (models.includes('openai/gpt-oss-120b')) {
+        groqTextModel.value = 'openai/gpt-oss-120b';
       } else if (textModels.length > 0) {
         groqTextModel.value = textModels[0];
       }

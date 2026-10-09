@@ -208,9 +208,10 @@ Designed for fast inference using Groq-hosted language models.
 
 | Model | Intended role |
 |---|---|
-| `openai/gpt-oss-120b` | High-capability contractual analysis |
-| `openai/gpt-oss-20b` | Lightweight, fast analysis |
-| `qwen/qwen3.8-27b` | Vision-enabled extraction, where supported |
+| `auto` | **Smart Selection (Recommended)** &bull; Dynamically selects optimal high-quota model |
+| `openai/gpt-oss-20b` | High-quota, ultra-fast analysis at 1,000 T/s (ideal for long contracts) |
+| `openai/gpt-oss-120b` | Deep reasoning analysis (8k TPM limit on free tier) |
+| `qwen/qwen3.8-27b` | Vision-enabled screenshot OCR |
 
 ### Google Gemini
 

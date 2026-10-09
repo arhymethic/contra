@@ -63,7 +63,20 @@
     '.social-share',
     '.chat-widget',
     '#intercom-container',
-    '#hubspot-messages-iframe-container'
+    '#hubspot-messages-iframe-container',
+    '.toc',
+    '.table-of-contents',
+    '.theme-doc-toc-mobile',
+    '.tocCollapsible_FdGq',
+    '.theme-doc-breadcrumbs',
+    '.breadcrumbs',
+    '.theme-doc-sidebar-container',
+    '[aria-label="Breadcrumbs"]',
+    '[aria-label="Table of contents"]',
+    '[aria-label="On this page"]',
+    '.pagination-nav',
+    '.theme-edit-this-page',
+    '.backToTopButton_zNcT'
   ];
 
   // Preferred legal container selectors ordered by specificity

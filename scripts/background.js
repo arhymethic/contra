@@ -46,7 +46,7 @@ const DEFAULT_CONFIG = {
   provider: 'groq', // 'groq' or 'gemini'
   groqApiKey: '',
   geminiApiKey: '',
-  groqTextModel: 'openai/gpt-oss-20b',
+  groqTextModel: 'auto',
   groqVisionModel: 'qwen/qwen3.8-27b',
   geminiModel: 'gemini-2.5-flash',
   wordThreshold: 200,
@@ -157,107 +157,177 @@ function extractJsonFromText(responseText) {
 }
 
 /**
- * Intelligently prune long legal documents to fit safely within LLM rate limits (TPM limits)
- * while preserving high-risk contractual clauses.
+/**
+ * Parse and phrase the legal Terms & Conditions to strip out all unimportant noise
+ * (jump links, table of contents lists, navigation breadcrumbs, marketing filler, device disclaimers)
+ * and extract ONLY the substantive, rights-affecting provisions to send to the AI model.
  */
-function pruneLegalDocument(text, maxChars = 16000) {
-  if (!text || text.length <= maxChars) {
-    return text || '';
-  }
+function distillContractProvisions(text, maxChars = 16000) {
+  if (!text || text.trim().length === 0) return '';
+  if (text.length <= 4000) return text; // If already short, keep as-is
 
-  // Legal risk keywords covering the 7 core categories
-  const RISK_KEYWORDS = [
-    /arbitrat/i,
-    /class\s*action/i,
-    /jury\s*trial/i,
-    /dispute/i,
-    /auto[- ]?renew/i,
-    /subscription/i,
-    /recurring/i,
-    /billing/i,
-    /refund/i,
-    /cancell/i,
-    /chargeback/i,
-    /fee/i,
-    /penalty/i,
-    /surcharge/i,
-    /unilateral/i,
-    /sole\s*discretion/i,
-    /without\s*(prior\s*)?notice/i,
-    /amend(ment)?/i,
-    /modif(y|ication)/i,
-    /liability/i,
-    /damages/i,
-    /warranty/i,
-    /disclaimer/i,
-    /indemn/i,
-    /waiv/i,
-    /perpetual/i,
-    /royalty[- ]free/i,
-    /intellectual\s*property/i,
-    /track(ing)?/i,
-    /sell.*(personal|data)/i,
-    /terminat/i,
-    /suspend/i,
-    /governing\s*law/i,
-    /jurisdiction/i
+  // Unimportant noise lines to discard
+  const UNIMPORTANT_LINE_PATTERNS = [
+    /^\s*table of contents\s*$/i,
+    /^\s*on this page\s*$/i,
+    /^\s*skip to (main )?content\s*$/i,
+    /^\s*back to top\s*$/i,
+    /^\s*breadcrumbs\s*$/i,
+    /^\s*last updated\s*(on)?\s*[:\w\s,]+\s*$/i,
+    /^\s*terms of service\s*\|\s*[\w\s]+\s*$/i,
+    /^\s*print( this page)?\s*$/i,
+    /^\s*share\s*$/i,
+    /^\s*follow us\s*$/i,
+    /^\s*all rights reserved\s*$/i,
+    /^\s*cookie (policy|settings|consent)\s*$/i,
+    /welcome to [\w\s]+(\.|!) we (are thrilled|love|strive|are dedicated)/i,
+    /requires an internet connection and a (compatible|supported) (browser|device)/i,
+    /please read these terms carefully before (using|accessing)/i,
+    /thank you for (visiting|using|choosing)/i,
+    /images are for illustrative purposes only/i
   ];
 
-  // Preserve the opening 3,000 characters (preamble, definitions, agreement scope)
-  const preamble = text.slice(0, 3000);
-  const remaining = text.slice(3000);
+  // Critical legal risk keywords (7 core consumer protection categories)
+  const RISK_PATTERNS = [
+    // 1. Dispute & Arbitration (Class action waivers, binding arbitration)
+    { regex: /arbitrat/i, weight: 10 },
+    { regex: /class\s*action/i, weight: 10 },
+    { regex: /jury\s*trial/i, weight: 10 },
+    { regex: /dispute\s*resolution/i, weight: 9 },
+    // 2. Auto-Renewal & Recurring charges
+    { regex: /auto[- ]?renew/i, weight: 10 },
+    { regex: /subscription.*(fee|bill|charg|plan)/i, weight: 10 },
+    { regex: /recurring\s*(billing|payment|charge)/i, weight: 10 },
+    // 3. Refund & Cancellation restrictions
+    { regex: /no\s*refund/i, weight: 10 },
+    { regex: /non[- ]refundable/i, weight: 10 },
+    { regex: /all\s*sales\s*(are\s*)?final/i, weight: 10 },
+    { regex: /forfeit(ure)?/i, weight: 9 },
+    { regex: /chargeback/i, weight: 9 },
+    { regex: /cancellation\s*(fee|penalty|policy)/i, weight: 9 },
+    // 4. Unilateral changes & modifications
+    { regex: /sole\s*discretion/i, weight: 10 },
+    { regex: /without\s*(prior\s*)?notice/i, weight: 10 },
+    { regex: /unilateral/i, weight: 10 },
+    { regex: /(modify|amend|alter|change).*terms.*discretion/i, weight: 10 },
+    { regex: /deemed\s*acceptance/i, weight: 9 },
+    // 5. Liability limitations & Disclaimers
+    { regex: /limitation of liability/i, weight: 10 },
+    { regex: /in no event shall.*be liable/i, weight: 10 },
+    { regex: /aggregate liability.*(not exceed|\$|fee)/i, weight: 10 },
+    { regex: /as[- ]is|as[- ]available/i, weight: 9 },
+    { regex: /disclaim.*warrant/i, weight: 9 },
+    { regex: /indemnif/i, weight: 9 },
+    // 6. Unfair terms & User Rights Forfeiture
+    { regex: /perpetual.*(irrevocable|license|right)/i, weight: 10 },
+    { regex: /royalty[- ]free/i, weight: 10 },
+    { regex: /transferable.*sublicensable/i, weight: 9 },
+    { regex: /moral\s*rights/i, weight: 9 },
+    { regex: /terminate.*account.*at any time/i, weight: 10 },
+    { regex: /suspend.*without.*notice/i, weight: 10 },
+    { regex: /sell.*(personal\s*data|information)/i, weight: 10 },
+    { regex: /track(ing)?|location data/i, weight: 7 },
+    { regex: /governing\s*law|jurisdiction|venue/i, weight: 6 }
+  ];
 
-  // Split remainder into paragraphs
-  const paragraphs = remaining.split(/\n\s*\n/);
-  const highPriority = [];
-  const normalPriority = [];
+  // Split into paragraphs / blocks
+  const rawBlocks = text.split(/\n\s*\n/);
+  const parsedSections = [];
+  let currentHeading = 'Agreement Terms';
+  let currentLines = [];
 
-  for (const para of paragraphs) {
-    const trimmed = para.trim();
-    if (trimmed.length < 30) continue; // Skip fragments or short headers
+  for (const block of rawBlocks) {
+    const trimmed = block.trim();
+    if (!trimmed) continue;
 
-    const isRisk = RISK_KEYWORDS.some(rx => rx.test(trimmed));
-    if (isRisk) {
-      highPriority.push(trimmed);
-    } else {
-      normalPriority.push(trimmed);
+    // Check if this block is a section heading
+    const isHeading = trimmed.startsWith('#') ||
+      /^[IVXLCDM]+\.\s+[A-Z]/i.test(trimmed) ||
+      /^Section\s+\d+/i.test(trimmed) ||
+      (/^\d+\.\s+[A-Z]/.test(trimmed) && trimmed.length < 80);
+
+    if (isHeading) {
+      if (currentLines.length > 0) {
+        parsedSections.push({ heading: currentHeading, lines: currentLines });
+        currentLines = [];
+      }
+      currentHeading = trimmed.replace(/^#+\s*/, '').trim();
+      continue;
+    }
+
+    // Skip unimportant boilerplate lines
+    if (UNIMPORTANT_LINE_PATTERNS.some(pat => pat.test(trimmed))) {
+      continue;
+    }
+
+    currentLines.push(trimmed);
+  }
+
+  if (currentLines.length > 0) {
+    parsedSections.push({ heading: currentHeading, lines: currentLines });
+  }
+
+  // Score each section and extract only the important lines
+  const importantSections = [];
+
+  for (const sec of parsedSections) {
+    const extractedLines = [];
+    let sectionScore = 0;
+
+    for (const line of sec.lines) {
+      // Evaluate line against risk patterns
+      let lineScore = 0;
+      for (const pat of RISK_PATTERNS) {
+        if (pat.regex.test(line)) {
+          lineScore += pat.weight;
+        }
+      }
+
+      if (lineScore > 0) {
+        extractedLines.push(line);
+        sectionScore += lineScore;
+      } else if (
+        line.length > 40 &&
+        /(you agree|you must|user agrees|we may|reserve the right|shall not|prohibited|mandatory)/i.test(line)
+      ) {
+        // Consumer obligation line
+        extractedLines.push(line);
+        sectionScore += 2;
+      }
+    }
+
+    if (extractedLines.length > 0) {
+      importantSections.push({
+        heading: sec.heading,
+        score: sectionScore,
+        content: extractedLines.join('\n\n')
+      });
     }
   }
 
-  let assembled = preamble + '\n\n--- [KEY PROVISIONS EXTRACTED FOR COMPLIANCE & RISK ANALYSIS] ---\n\n';
-  let budgetLeft = maxChars - assembled.length - 800; // Leave 800 chars for closing
+  // Preserve preamble/acceptance (first ~1,200 chars of document if available)
+  const preamble = text.slice(0, 1200).replace(/\n{3,}/g, '\n\n').trim();
 
-  // 1. Add high-priority clauses first
-  for (const clause of highPriority) {
-    if (budgetLeft <= 0) break;
-    const clauseText = clause + '\n\n';
-    if (clauseText.length <= budgetLeft) {
-      assembled += clauseText;
-      budgetLeft -= clauseText.length;
+  let assembled = `--- [CORE ACCEPTANCE CLAUSE] ---\n${preamble}\n\n--- [DISTILLED LEGAL PROVISIONS & CONSUMER CLAUSES] ---\n\n`;
+  let currentBudget = maxChars - assembled.length - 800;
+
+  // Add distilled sections in document order
+  for (const sec of importantSections) {
+    if (currentBudget <= 0) break;
+    const blockText = `[SECTION: ${sec.heading}]\n${sec.content}\n\n`;
+    if (blockText.length <= currentBudget) {
+      assembled += blockText;
+      currentBudget -= blockText.length;
     } else {
-      assembled += clause.slice(0, budgetLeft) + '...\n\n';
-      budgetLeft = 0;
+      assembled += `[SECTION: ${sec.heading}]\n${sec.content.slice(0, currentBudget)}...\n\n`;
       break;
     }
   }
 
-  // 2. If budget remains, add normal paragraphs
-  if (budgetLeft > 500) {
-    for (const para of normalPriority) {
-      if (budgetLeft <= 0) break;
-      const paraText = para + '\n\n';
-      if (paraText.length <= budgetLeft) {
-        assembled += paraText;
-        budgetLeft -= paraText.length;
-      } else {
-        break;
-      }
-    }
-  }
-
-  // 3. Keep closing section (governing law, opt-out address, etc.)
-  if (text.length > 3500) {
-    assembled += '\n--- [CLOSING PROVISIONS & GOVERNING LAW] ---\n' + text.slice(-600);
+  // Closing governing law / jurisdiction
+  if (text.length > 2000) {
+    const closing = text.slice(-600).trim();
+    assembled += `--- [GOVERNING LAW & CLOSING] ---\n${closing}`;
   }
 
   return assembled;
@@ -269,9 +339,17 @@ function pruneLegalDocument(text, maxChars = 16000) {
  */
 async function callGroqAPI({ apiKey, mode, text, screenshotUrl, config }) {
   const isVision = mode === 'SCREENSHOT_VISION';
+  let isAutoModel = false;
   let model = isVision
     ? (config.groqVisionModel || 'qwen/qwen3.8-27b')
-    : (config.groqTextModel || 'openai/gpt-oss-20b');
+    : (config.groqTextModel || 'auto');
+
+  // Handle 'auto' text model selection:
+  // Auto selects openai/gpt-oss-20b for high TPM quota & 1,000 T/s speed on free tier
+  if (!isVision && (model === 'auto' || !model)) {
+    isAutoModel = true;
+    model = 'openai/gpt-oss-20b';
+  }
 
   // If the model was legacy enterprise llama, auto-switch to active openai/gpt-oss-20b
   if (!isVision && (model === 'llama-3.1-8b-instant' || model === 'llama-3.3-70b-versatile')) {
@@ -335,13 +413,13 @@ async function callGroqAPI({ apiKey, mode, text, screenshotUrl, config }) {
 
       // Graceful fallback to DOM text extraction if text is available
       if (text && text.trim().length > 30) {
-        console.info('[Contra] Automatically falling back to DOM text mode with openai/gpt-oss-120b...');
+        console.info('[Contra] Automatically falling back to DOM text mode with openai/gpt-oss-20b...');
         const textResult = await callGroqAPI({
           apiKey,
           mode: 'DOM_TEXT',
           text,
           screenshotUrl: null,
-          config
+          config: { ...config, groqTextModel: 'openai/gpt-oss-20b' }
         });
         textResult.overall_summary = `[Vision Notice: Groq vision is unavailable on your tier. Successfully analyzed via DOM text extraction]\n\n${textResult.overall_summary}`;
         textResult.analysis_mode_used = 'DOM_TEXT';
@@ -361,11 +439,10 @@ async function callGroqAPI({ apiKey, mode, text, screenshotUrl, config }) {
     parsed.analysis_mode_used = 'SCREENSHOT_VISION';
     return parsed;
   } else {
-    // Text mode: Prune intelligently to stay safely under Groq's 8,000 TPM limit
-    // For 120b (8k TPM limit), allocate ~16,000 chars (~4,000 tokens) for prompt
-    // For 20b (higher TPM quota), allocate up to 30,000 chars
-    const charBudget = (model === 'openai/gpt-oss-20b') ? 30000 : 16000;
-    const processedText = pruneLegalDocument(text, charBudget);
+    // Text mode: First phrase the ToC/document to strip out all unimportant boilerplate
+    // and extract ONLY the substantive, rights-affecting provisions
+    const charBudget = (model === 'openai/gpt-oss-20b') ? 28000 : 15000;
+    const distilledText = distillContractProvisions(text, charBudget);
 
     messages = [
       {
@@ -374,7 +451,7 @@ async function callGroqAPI({ apiKey, mode, text, screenshotUrl, config }) {
       },
       {
         role: 'user',
-        content: `Analyze the following Terms & Conditions / Legal Document text. Set analysis_mode_used to "DOM_TEXT".\n\n--- BEGIN DOCUMENT ---\n${processedText}\n--- END DOCUMENT ---`
+        content: `Analyze the following Terms & Conditions / Legal Document text (unimportant boilerplate has been filtered; only key provisions are included). Set analysis_mode_used to "DOM_TEXT".\n\n--- BEGIN DOCUMENT ---\n${distilledText}\n--- END DOCUMENT ---`
       }
     ];
 
@@ -383,7 +460,7 @@ async function callGroqAPI({ apiKey, mode, text, screenshotUrl, config }) {
       messages: messages,
       response_format: { type: 'json_object' },
       temperature: 0.1,
-      max_tokens: 1500 // Lowered from 3000 to prevent TPM quota exhaustion
+      max_tokens: 1500 // Prevents TPM quota exhaustion
     };
 
     if (model.includes('gpt-oss') || model.includes('deepseek') || model.includes('qwq')) {
@@ -399,9 +476,9 @@ async function callGroqAPI({ apiKey, mode, text, screenshotUrl, config }) {
       body: JSON.stringify(requestPayload)
     });
 
-    if (!response.ok && response.status === 404 && model !== 'openai/gpt-oss-120b') {
-      console.warn(`[Contra] Model ${model} not available on this Groq account. Retrying with openai/gpt-oss-120b...`);
-      requestPayload.model = 'openai/gpt-oss-120b';
+    if (!response.ok && response.status === 404 && model !== 'openai/gpt-oss-20b') {
+      console.warn(`[Contra] Model ${model} not available on this Groq account. Retrying with openai/gpt-oss-20b...`);
+      requestPayload.model = 'openai/gpt-oss-20b';
       requestPayload.reasoning_format = 'hidden';
       const fallbackResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
@@ -413,6 +490,7 @@ async function callGroqAPI({ apiKey, mode, text, screenshotUrl, config }) {
       });
       if (fallbackResponse.ok) {
         response = fallbackResponse;
+        model = 'openai/gpt-oss-20b';
       }
     }
 
@@ -442,7 +520,7 @@ async function callGroqAPI({ apiKey, mode, text, screenshotUrl, config }) {
           const fallbackResult = await callGroqAPI({
             apiKey,
             mode: 'DOM_TEXT',
-            text: pruneLegalDocument(text, 14000),
+            text: distillContractProvisions(text, 14000),
             screenshotUrl: null,
             config: { ...config, groqTextModel: 'openai/gpt-oss-20b' }
           });
@@ -457,7 +535,7 @@ async function callGroqAPI({ apiKey, mode, text, screenshotUrl, config }) {
       if (isTpmError && !requestPayload.__isRetry) {
         console.warn('[Contra] Retrying with compact contract budget (7.5k chars)...');
         try {
-          const compactText = pruneLegalDocument(text, 7500);
+          const compactText = distillContractProvisions(text, 7500);
           const retryPayload = {
             ...requestPayload,
             __isRetry: true,
@@ -508,6 +586,11 @@ async function callGroqAPI({ apiKey, mode, text, screenshotUrl, config }) {
 
     const parsed = extractJsonFromText(rawContent);
     parsed.analysis_mode_used = 'DOM_TEXT';
+    if (isAutoModel) {
+      parsed.model_used = `${model} (Auto)`;
+    } else {
+      parsed.model_used = model;
+    }
     return parsed;
   }
 }
@@ -543,13 +626,13 @@ async function callGeminiAPI({ apiKey, mode, text, screenshotUrl, config }) {
       }
     ];
   } else {
-    const truncatedText = text.slice(0, 100000);
+    const distilledText = distillContractProvisions(text, 50000);
     contents = [
       {
         role: 'user',
         parts: [
           {
-            text: `${SYSTEM_PROMPT}\n\nAnalyze the following Terms & Conditions text. Set analysis_mode_used to "DOM_TEXT".\n\n--- BEGIN DOCUMENT ---\n${truncatedText}\n--- END DOCUMENT ---`
+            text: `${SYSTEM_PROMPT}\n\nAnalyze the following Terms & Conditions text (unimportant boilerplate has been filtered; only key provisions are included). Set analysis_mode_used to "DOM_TEXT".\n\n--- BEGIN DOCUMENT ---\n${distilledText}\n--- END DOCUMENT ---`
           }
         ]
       }
