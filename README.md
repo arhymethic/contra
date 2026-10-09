@@ -1,4 +1,4 @@
-# Contra — AI Terms & Conditions Analyzer (Chrome Extension)
+# Contra Chrome Ext
 
 **Contra** is a production-ready **Manifest V3** Chrome Extension that reads, extracts, and analyzes Terms & Conditions (ToC / ToS), Privacy Policies, and End User License Agreements (EULA) in real-time. It leverages the ultra-fast **Groq Platform API** (`openai/gpt-oss-120b`, `openai/gpt-oss-20b`, `qwen/qwen3.8-27b`) and the **Google Gemini Flash API** (`gemini-2.5-flash`) with strict JSON schema enforcement to protect consumers from predatory contractual terms.
 
@@ -96,20 +96,6 @@ Contrat Ext/
 1. Get a free API key from [Google AI Studio](https://aistudio.google.com/app/apikey).
 2. In Contra Settings, select **Google Gemini**, paste your `AIzaSy...` key, and save.
    * Default Model: `gemini-2.5-flash` (Native multimodal vision OCR and text analysis on all keys)
-
----
-
-## 🧪 Testing the Extension
-
-1. Open the included sample contract test page in Chrome:
-   - File URL: `file:///home/rhythm/Projects/Contrat Ext/test/sample_tos.html`
-2. Click the **Contra** extension icon in your Chrome toolbar.
-3. Click **"Scan Contract"** (or **"👁️ Vision"**).
-4. Contra will:
-   - Extract and sanitize the contract text from `<article class="terms-content">`.
-   - Send the sanitized text/screenshot to Groq or Gemini with strict JSON schema enforcement.
-   - Display the executive summary, overall risk rating (🔴 **High Risk**), and expandable accordion cards highlighting Auto-Renewal, No-Refunds, Unilateral Modification, and Mandatory Arbitration!
-5. Click **"Copy Analysis Report"** to copy a formatted Markdown report to your clipboard.
 
 ---
 
