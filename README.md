@@ -1,6 +1,8 @@
-# Contra 
-
-**Understand the fine print. Protect your rights.**
+<div align="center">
+  <img src="icons/contra-logo.png" alt="Contra Logo" width="128" height="128" />
+  <h1>Contra</h1>
+  <p><strong>Understand the fine print. Protect your rights.</strong></p>
+</div>
 
 Contra is a Manifest V3 Chrome extension that extracts, analyzes, and explains Terms of Service (ToS), Privacy Policies, and End User License Agreements (EULAs) in real time.
 
